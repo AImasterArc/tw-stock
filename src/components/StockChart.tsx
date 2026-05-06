@@ -65,15 +65,17 @@ const getInstStatsForDate = (targetDate: string, instData?: any[]): InstStats | 
 
 const formatInstString = (stats: InstStats | null, type: 'foreign' | 'trust') => {
   if (!stats) return '<Unknown>';
-  const change = type === 'foreign' ? stats.foreignChange : stats.trustChange;
+  const changeShares = type === 'foreign' ? stats.foreignChange : stats.trustChange;
+  const changeLots = changeShares / 1000;
   
-  const sign = change > 0 ? '+' : '';
-  return `${sign}${change.toLocaleString()}`;
+  const sign = changeLots > 0 ? '+' : '';
+  return `${sign}${Math.round(changeLots).toLocaleString()}張`;
 };
 
 const StockChart = ({ data, title, type = 'candlestick', showVolume = false, institutionalData }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const subChartContainerRef = useRef<HTMLDivElement>(null);
+  const subChartContainerRef1 = useRef<HTMLDivElement>(null); // 外資副圖
+  const subChartContainerRef2 = useRef<HTMLDivElement>(null); // 投信副圖
   const hasInst = institutionalData && institutionalData.length > 0;
   
   // Legend state
@@ -89,15 +91,15 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
   useEffect(() => {
     if (!chartContainerRef.current || !data || data.length === 0) return;
 
-    let subChart: any = null;
+    let subChart1: any = null;
+    let subChart2: any = null;
 
     const handleResize = () => {
       const clientWidth = chartContainerRef.current?.clientWidth;
       if (clientWidth) {
         chart.applyOptions({ width: clientWidth });
-        if (subChart) {
-          subChart.applyOptions({ width: clientWidth });
-        }
+        if (subChart1) subChart1.applyOptions({ width: clientWidth });
+        if (subChart2) subChart2.applyOptions({ width: clientWidth });
       }
     };
 
@@ -111,7 +113,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 350,
+      height: 300,
       timeScale: {
         visible: !hasInst, // 如果有副圖表，則隱藏主圖表的時間軸
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -128,6 +130,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
         visible: true,
+        minimumWidth: 80, // 確保主副圖寬度完全對齊
       },
       leftPriceScale: {
         visible: false,
@@ -204,9 +207,18 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       }
     });
 
-    // 初始化副圖表：外資與投信變化量
-    if (hasInst && subChartContainerRef.current) {
-      subChart = createChart(subChartContainerRef.current, {
+    // 初始化副圖表：外資與投信變化量（分成兩個副圖，用柱狀圖顯示，比例尺一致）
+    if (hasInst && subChartContainerRef1.current && subChartContainerRef2.current) {
+      // 1. 計算兩邊比例尺一致的對稱 Min/Max (以張數為單位)
+      const fLots = institutionalData.map(item => (item.foreign || 0) / 1000);
+      const tLots = institutionalData.map(item => (item.trust || 0) / 1000);
+      const allLots = [...fLots, ...tLots];
+      const absMax = Math.max(...allLots.map(Math.abs));
+      const sharedMax = absMax > 0 ? absMax * 1.15 : 100;
+      const sharedMin = -sharedMax;
+
+      // 2. 建立外資副圖表 subChart1
+      subChart1 = createChart(subChartContainerRef1.current, {
         layout: {
           background: { type: ColorType.Solid, color: 'transparent' },
           textColor: '#94a3b8',
@@ -215,10 +227,69 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
           horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
         },
-        width: subChartContainerRef.current.clientWidth,
-        height: 120, // 類似標準軟體的低高度副圖
+        width: subChartContainerRef1.current.clientWidth,
+        height: 100,
         timeScale: {
+          visible: false, // 隱藏中間圖的時間軸
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(255, 255, 255, 0.1)',
           visible: true,
+          minimumWidth: 80, // 與主圖寬度完美對齊
+        },
+        leftPriceScale: {
+          visible: false,
+        }
+      });
+
+      const foreignSeries = subChart1.addHistogramSeries({
+        priceFormat: {
+          type: 'volume',
+        },
+        autoscaleInfoProvider: () => ({
+          priceRange: {
+            minValue: sharedMin,
+            maxValue: sharedMax,
+          },
+        }),
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+
+      const fData = institutionalData.map(item => {
+        const val = (item.foreign || 0) / 1000;
+        return {
+          time: item.time,
+          value: val,
+          color: val > 0 ? '#ef4444' : (val < 0 ? '#22c55e' : '#94a3b8')
+        };
+      });
+      foreignSeries.setData(fData);
+
+      foreignSeries.createPriceLine({
+        price: 0,
+        color: 'rgba(255, 255, 255, 0.25)',
+        lineWidth: 1,
+        lineStyle: 2,
+        axisLabelVisible: false,
+        title: '外資 (張)',
+      });
+
+      // 3. 建立投信副圖表 subChart2
+      subChart2 = createChart(subChartContainerRef2.current, {
+        layout: {
+          background: { type: ColorType.Solid, color: 'transparent' },
+          textColor: '#94a3b8',
+        },
+        grid: {
+          vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+          horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        },
+        width: subChartContainerRef2.current.clientWidth,
+        height: 110, // 稍微高一點點保留給時間軸刻度
+        timeScale: {
+          visible: true, // 最底下的副圖顯露時間軸
           borderColor: 'rgba(255, 255, 255, 0.1)',
           tickMarkFormatter: (time: any) => {
             if (typeof time === 'string') {
@@ -233,70 +304,75 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         rightPriceScale: {
           borderColor: 'rgba(255, 255, 255, 0.1)',
           visible: true,
+          minimumWidth: 80, // 與主圖、外資副圖寬度完美對齊
         },
         leftPriceScale: {
           visible: false,
         }
       });
 
-      const foreignSeries = subChart.addLineSeries({
-        color: '#38bdf8', // 外資用藍色線
-        lineWidth: 1.5,
-        title: '外資變化',
+      const trustSeries = subChart2.addHistogramSeries({
+        priceFormat: {
+          type: 'volume',
+        },
+        autoscaleInfoProvider: () => ({
+          priceRange: {
+            minValue: sharedMin,
+            maxValue: sharedMax,
+          },
+        }),
         lastValueVisible: false,
         priceLineVisible: false,
       });
 
-      const trustSeries = subChart.addLineSeries({
-        color: '#fb923c', // 投信用橘色線
-        lineWidth: 1.5,
-        title: '投信變化',
-        lastValueVisible: false,
-        priceLineVisible: false,
+      const tData = institutionalData.map(item => {
+        const val = (item.trust || 0) / 1000;
+        return {
+          time: item.time,
+          value: val,
+          color: val > 0 ? '#ef4444' : (val < 0 ? '#22c55e' : '#94a3b8')
+        };
       });
-
-      const fData = institutionalData.map(item => ({
-        time: item.time,
-        value: item.foreign || 0
-      }));
-
-      const tData = institutionalData.map(item => ({
-        time: item.time,
-        value: item.trust || 0
-      }));
-
-      foreignSeries.setData(fData);
       trustSeries.setData(tData);
 
-      // 加一條 0 軸線作為基準線
-      foreignSeries.createPriceLine({
+      trustSeries.createPriceLine({
         price: 0,
-        color: 'rgba(255, 255, 255, 0.2)',
+        color: 'rgba(255, 255, 255, 0.25)',
         lineWidth: 1,
-        lineStyle: 2, // 虛線
+        lineStyle: 2,
         axisLabelVisible: false,
-        title: '',
+        title: '投信 (張)',
       });
 
-      // 同步縮放與滾動
-      let isSyncingMain = false;
-      let isSyncingSub = false;
+      // 4. 三張圖表時間軸 100% 同步滾動與縮放
+      let isSyncing = false;
+      const syncCharts = (range: any, excludeScale: any) => {
+        if (isSyncing) return;
+        isSyncing = true;
 
-      const mainTimeScale = chart.timeScale();
-      const subTimeScale = subChart.timeScale();
+        const scales = [chart.timeScale()];
+        if (subChart1) scales.push(subChart1.timeScale());
+        if (subChart2) scales.push(subChart2.timeScale());
 
-      mainTimeScale.subscribeVisibleLogicalRangeChange((range) => {
-        if (isSyncingSub) return;
-        isSyncingMain = true;
-        subTimeScale.setVisibleLogicalRange(range);
-        isSyncingMain = false;
+        scales.forEach(scale => {
+          if (scale !== excludeScale) {
+            scale.setVisibleLogicalRange(range);
+          }
+        });
+
+        isSyncing = false;
+      };
+
+      chart.timeScale().subscribeVisibleLogicalRangeChange((range: any) => {
+        syncCharts(range, chart.timeScale());
       });
 
-      subTimeScale.subscribeVisibleLogicalRangeChange((range) => {
-        if (isSyncingMain) return;
-        isSyncingSub = true;
-        mainTimeScale.setVisibleLogicalRange(range);
-        isSyncingSub = false;
+      subChart1.timeScale().subscribeVisibleLogicalRangeChange((range: any) => {
+        syncCharts(range, subChart1.timeScale());
+      });
+
+      subChart2.timeScale().subscribeVisibleLogicalRangeChange((range: any) => {
+        syncCharts(range, subChart2.timeScale());
       });
     }
 
@@ -336,8 +412,11 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     };
 
     chart.subscribeCrosshairMove(onCrosshairMove);
-    if (subChart) {
-      subChart.subscribeCrosshairMove(onCrosshairMove);
+    if (subChart1) {
+      subChart1.subscribeCrosshairMove(onCrosshairMove);
+    }
+    if (subChart2) {
+      subChart2.subscribeCrosshairMove(onCrosshairMove);
     }
 
     // 初始化 Legend
@@ -361,15 +440,17 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
-      if (subChart) {
-        subChart.remove();
+      if (subChart1) {
+        subChart1.remove();
+      }
+      if (subChart2) {
+        subChart2.remove();
       }
     };
   }, [data, type, showVolume, institutionalData, hasInst]);
 
   const latestData = data && data.length > 0 ? data[data.length - 1] : null;
   const prevData = data && data.length > 1 ? data[data.length - 2] : null;
-  const latestInstStats = latestData ? getInstStatsForDate(latestData.time, institutionalData) : null;
 
   let changePercent = 0;
   let changeAmt = 0;
@@ -464,13 +545,20 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         </div>
       )}
 
-      <div ref={chartContainerRef} className="chart-wrapper" style={{ height: '350px' }} />
+      <div ref={chartContainerRef} className="chart-wrapper" style={{ height: '300px' }} />
       {hasInst && (
-        <div 
-          ref={subChartContainerRef} 
-          className="chart-wrapper" 
-          style={{ height: '120px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
-        />
+        <>
+          <div 
+            ref={subChartContainerRef1} 
+            className="chart-wrapper" 
+            style={{ height: '100px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
+          />
+          <div 
+            ref={subChartContainerRef2} 
+            className="chart-wrapper" 
+            style={{ height: '110px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
+          />
+        </>
       )}
     </div>
   );

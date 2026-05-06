@@ -19,7 +19,7 @@ function Sidebar() {
   return (
     <nav className="sidebar">
       <div className="sidebar-header">
-        <h1>台股動態</h1>
+        <h1>看對產業買飆股</h1>
       </div>
       {navItems.map((item) => (
         <button
