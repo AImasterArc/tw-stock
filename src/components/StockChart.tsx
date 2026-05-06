@@ -66,10 +66,9 @@ const getInstStatsForDate = (targetDate: string, instData?: any[]): InstStats | 
 const formatInstString = (stats: InstStats | null, type: 'foreign' | 'trust') => {
   if (!stats) return '<Unknown>';
   const change = type === 'foreign' ? stats.foreignChange : stats.trustChange;
-  const total = type === 'foreign' ? stats.foreignTotal : stats.trustTotal;
   
   const sign = change > 0 ? '+' : '';
-  return `${total.toLocaleString()} (${sign}${change.toLocaleString()})`;
+  return `${sign}${change.toLocaleString()}`;
 };
 
 const StockChart = ({ data, title, type = 'candlestick', showVolume = false, institutionalData }: ChartProps) => {
@@ -292,23 +291,6 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
               </span>
             </div>
             
-            {institutionalData && institutionalData.length > 0 && (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <div>
-                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>外資:</span>
-                  <span style={{ color: latestInstStats ? (latestInstStats.foreignChange > 0 ? '#ef4444' : (latestInstStats.foreignChange < 0 ? '#22c55e' : '#e2e8f0')) : '#94a3b8', fontWeight: 'bold' }}>
-                    {formatInstString(latestInstStats, 'foreign')}
-                  </span>
-                </div>
-                <div>
-                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>投信:</span>
-                  <span style={{ color: latestInstStats ? (latestInstStats.trustChange > 0 ? '#ef4444' : (latestInstStats.trustChange < 0 ? '#22c55e' : '#e2e8f0')) : '#94a3b8', fontWeight: 'bold' }}>
-                    {formatInstString(latestInstStats, 'trust')}
-                  </span>
-                </div>
-              </div>
-            )}
-            
             {brokenMAs.length > 0 && (
               <div>
                 <span style={{ color: '#94a3b8', marginRight: '4px' }}>跌破:</span>
@@ -366,8 +348,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           <div style={{ color: '#60a5fa' }}>成交量: {legend.vol}</div>
           {institutionalData && institutionalData.length > 0 && (
             <div style={{ display: 'flex', gap: '8px' }}>
-              {legend.foreign && <span style={{ color: legend.foreign.includes('(+') ? '#ef4444' : (legend.foreign.includes('(-') ? '#22c55e' : '#e2e8f0') }}>外資: {legend.foreign}</span>}
-              {legend.trust && <span style={{ color: legend.trust.includes('(+') ? '#ef4444' : (legend.trust.includes('(-') ? '#22c55e' : '#e2e8f0') }}>投信: {legend.trust}</span>}
+              {legend.foreign && <span style={{ color: legend.foreign.includes('+') ? '#ef4444' : (legend.foreign.includes('-') ? '#22c55e' : '#e2e8f0') }}>外資: {legend.foreign}</span>}
+              {legend.trust && <span style={{ color: legend.trust.includes('+') ? '#ef4444' : (legend.trust.includes('-') ? '#22c55e' : '#e2e8f0') }}>投信: {legend.trust}</span>}
             </div>
           )}
         </div>
