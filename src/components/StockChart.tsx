@@ -10,6 +10,68 @@ interface ChartProps {
   institutionalData?: any[];
 }
 
+interface InstStats {
+  foreignChange: number;
+  foreignTotal: number;
+  trustChange: number;
+  trustTotal: number;
+  date: string;
+}
+
+const getInstStatsForDate = (targetDate: string, instData?: any[]): InstStats | null => {
+  if (!instData || instData.length === 0) return null;
+  
+  let idx = instData.findIndex(d => d.time === targetDate);
+  if (idx === -1) {
+    for (let i = instData.length - 1; i >= 0; i--) {
+      if (instData[i].time <= targetDate) {
+        idx = i;
+        break;
+      }
+    }
+  }
+  
+  if (idx === -1) return null;
+
+  // Find a day with non-zero info starting from idx backwards
+  let activeIdx = idx;
+  while (activeIdx >= 0) {
+    const item = instData[activeIdx];
+    if ((item.foreign && item.foreign !== 0) || (item.trust && item.trust !== 0)) {
+      break;
+    }
+    activeIdx--;
+  }
+
+  if (activeIdx < 0) return null;
+
+  // Cumulative sum up to activeIdx
+  let foreignTotal = 0;
+  let trustTotal = 0;
+  for (let i = 0; i <= activeIdx; i++) {
+    foreignTotal += instData[i].foreign || 0;
+    trustTotal += instData[i].trust || 0;
+  }
+
+  const activeItem = instData[activeIdx];
+  return {
+    foreignChange: activeItem.foreign || 0,
+    foreignTotal,
+    trustChange: activeItem.trust || 0,
+    trustTotal,
+    date: activeItem.time
+  };
+};
+
+const formatInstString = (stats: InstStats | null, type: 'foreign' | 'trust') => {
+  if (!stats) return '<Unknown>';
+  const change = type === 'foreign' ? stats.foreignChange : stats.trustChange;
+  const total = type === 'foreign' ? stats.foreignTotal : stats.trustTotal;
+  
+  const sign = change > 0 ? '+' : '';
+  return `${total.toLocaleString()} (${sign}${change.toLocaleString()})`;
+};
+
 const StockChart = ({ data, title, type = 'candlestick', showVolume = false, institutionalData }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   
@@ -140,7 +202,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     chart.subscribeCrosshairMove((param: MouseEventParams) => {
       if (param.time) {
         const dataItem = data.find(d => d.time === param.time);
-        const instItem = institutionalData?.find(d => d.time === param.time);
+        const instStats = getInstStatsForDate(String(param.time), institutionalData);
         
         if (dataItem) {
           setLegend({
@@ -150,15 +212,15 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
             ma20: dataItem.ma20 ? dataItem.ma20.toFixed(2) : '',
             ma60: dataItem.ma60 ? dataItem.ma60.toFixed(2) : '',
             vol: dataItem.volume ? dataItem.volume.toLocaleString() : '0',
-            foreign: instItem ? (instItem.foreign > 0 ? `+${instItem.foreign.toLocaleString()}` : instItem.foreign.toLocaleString()) : '',
-            trust: instItem ? (instItem.trust > 0 ? `+${instItem.trust.toLocaleString()}` : instItem.trust.toLocaleString()) : '',
+            foreign: formatInstString(instStats, 'foreign'),
+            trust: formatInstString(instStats, 'trust'),
           });
         }
       } else {
         // Reset to last item when mouse leaves
         const lastItem = data[data.length - 1];
-        const lastInst = institutionalData?.[institutionalData.length - 1];
         if (lastItem) {
+          const instStats = getInstStatsForDate(lastItem.time, institutionalData);
           setLegend({
             date: lastItem.time,
             ma5: lastItem.ma5 ? lastItem.ma5.toFixed(2) : '',
@@ -166,8 +228,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
             ma20: lastItem.ma20 ? lastItem.ma20.toFixed(2) : '',
             ma60: lastItem.ma60 ? lastItem.ma60.toFixed(2) : '',
             vol: lastItem.volume ? lastItem.volume.toLocaleString() : '0',
-            foreign: lastInst ? (lastInst.foreign > 0 ? `+${lastInst.foreign.toLocaleString()}` : lastInst.foreign.toLocaleString()) : '',
-            trust: lastInst ? (lastInst.trust > 0 ? `+${lastInst.trust.toLocaleString()}` : lastInst.trust.toLocaleString()) : '',
+            foreign: formatInstString(instStats, 'foreign'),
+            trust: formatInstString(instStats, 'trust'),
           });
         }
       }
@@ -175,8 +237,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
 
     // Initialize legend with last item
     const lastItem = data[data.length - 1];
-    const lastInst = institutionalData?.[institutionalData.length - 1];
     if (lastItem) {
+      const instStats = getInstStatsForDate(lastItem.time, institutionalData);
       setLegend({
         date: lastItem.time,
         ma5: lastItem.ma5 ? lastItem.ma5.toFixed(2) : '',
@@ -184,8 +246,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         ma20: lastItem.ma20 ? lastItem.ma20.toFixed(2) : '',
         ma60: lastItem.ma60 ? lastItem.ma60.toFixed(2) : '',
         vol: lastItem.volume ? lastItem.volume.toLocaleString() : '0',
-        foreign: lastInst ? (lastInst.foreign > 0 ? `+${lastInst.foreign.toLocaleString()}` : lastInst.foreign.toLocaleString()) : '',
-        trust: lastInst ? (lastInst.trust > 0 ? `+${lastInst.trust.toLocaleString()}` : lastInst.trust.toLocaleString()) : '',
+        foreign: formatInstString(instStats, 'foreign'),
+        trust: formatInstString(instStats, 'trust'),
       });
     }
 
@@ -199,7 +261,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
 
   const latestData = data && data.length > 0 ? data[data.length - 1] : null;
   const prevData = data && data.length > 1 ? data[data.length - 2] : null;
-  const latestInst = institutionalData && institutionalData.length > 0 ? institutionalData[institutionalData.length - 1] : null;
+  const latestInstStats = latestData ? getInstStatsForDate(latestData.time, institutionalData) : null;
 
   let changePercent = 0;
   let changeAmt = 0;
@@ -230,18 +292,18 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
               </span>
             </div>
             
-            {latestInst && (
+            {institutionalData && institutionalData.length > 0 && (
               <div style={{ display: 'flex', gap: '8px' }}>
                 <div>
-                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>外資變化:</span>
-                  <span style={{ color: latestInst.foreign > 0 ? '#ef4444' : (latestInst.foreign < 0 ? '#22c55e' : '#e2e8f0'), fontWeight: 'bold' }}>
-                    {latestInst.foreign > 0 ? '+' : ''}{latestInst.foreign.toLocaleString()}
+                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>外資:</span>
+                  <span style={{ color: latestInstStats ? (latestInstStats.foreignChange > 0 ? '#ef4444' : (latestInstStats.foreignChange < 0 ? '#22c55e' : '#e2e8f0')) : '#94a3b8', fontWeight: 'bold' }}>
+                    {formatInstString(latestInstStats, 'foreign')}
                   </span>
                 </div>
                 <div>
-                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>投信變化:</span>
-                  <span style={{ color: latestInst.trust > 0 ? '#ef4444' : (latestInst.trust < 0 ? '#22c55e' : '#e2e8f0'), fontWeight: 'bold' }}>
-                    {latestInst.trust > 0 ? '+' : ''}{latestInst.trust.toLocaleString()}
+                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>投信:</span>
+                  <span style={{ color: latestInstStats ? (latestInstStats.trustChange > 0 ? '#ef4444' : (latestInstStats.trustChange < 0 ? '#22c55e' : '#e2e8f0')) : '#94a3b8', fontWeight: 'bold' }}>
+                    {formatInstString(latestInstStats, 'trust')}
                   </span>
                 </div>
               </div>
@@ -304,8 +366,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           <div style={{ color: '#60a5fa' }}>成交量: {legend.vol}</div>
           {institutionalData && institutionalData.length > 0 && (
             <div style={{ display: 'flex', gap: '8px' }}>
-              {legend.foreign && <span style={{ color: legend.foreign.includes('+') ? '#ef4444' : '#22c55e' }}>外資: {legend.foreign}</span>}
-              {legend.trust && <span style={{ color: legend.trust.includes('+') ? '#ef4444' : '#22c55e' }}>投信: {legend.trust}</span>}
+              {legend.foreign && <span style={{ color: legend.foreign.includes('(+') ? '#ef4444' : (legend.foreign.includes('(-') ? '#22c55e' : '#e2e8f0') }}>外資: {legend.foreign}</span>}
+              {legend.trust && <span style={{ color: legend.trust.includes('(+') ? '#ef4444' : (legend.trust.includes('(-') ? '#22c55e' : '#e2e8f0') }}>投信: {legend.trust}</span>}
             </div>
           )}
         </div>
