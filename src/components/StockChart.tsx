@@ -73,6 +73,8 @@ const formatInstString = (stats: InstStats | null, type: 'foreign' | 'trust') =>
 
 const StockChart = ({ data, title, type = 'candlestick', showVolume = false, institutionalData }: ChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const subChartContainerRef = useRef<HTMLDivElement>(null);
+  const hasInst = institutionalData && institutionalData.length > 0;
   
   // Legend state
   const [legend, setLegend] = useState<{
@@ -87,8 +89,16 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
   useEffect(() => {
     if (!chartContainerRef.current || !data || data.length === 0) return;
 
+    let subChart: any = null;
+
     const handleResize = () => {
-      chart.applyOptions({ width: chartContainerRef.current?.clientWidth });
+      const clientWidth = chartContainerRef.current?.clientWidth;
+      if (clientWidth) {
+        chart.applyOptions({ width: clientWidth });
+        if (subChart) {
+          subChart.applyOptions({ width: clientWidth });
+        }
+      }
     };
 
     const chart = createChart(chartContainerRef.current, {
@@ -101,11 +111,11 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 500,
+      height: 350,
       timeScale: {
+        visible: !hasInst, // 如果有副圖表，則隱藏主圖表的時間軸
         borderColor: 'rgba(255, 255, 255, 0.1)',
         tickMarkFormatter: (time: any) => {
-          // time could be string like '2024-05-05' or object {year, month, day}
           if (typeof time === 'string') {
             const parts = time.split('-');
             if (parts.length >= 2) return `${parts[1]}月`;
@@ -117,17 +127,17 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       },
       rightPriceScale: {
         borderColor: 'rgba(255, 255, 255, 0.1)',
-        visible: true, // 價格維持在右側
+        visible: true,
       },
       leftPriceScale: {
-        visible: false, // 隱藏左側 Y 軸，因為我們用 Legend 顯示文字
+        visible: false,
       }
     });
 
     let volumeSeries: ISeriesApi<any> | null = null;
     if (showVolume) {
       volumeSeries = chart.addHistogramSeries({
-        color: 'rgba(96, 165, 250, 0.3)', // 30% 透明度藍色
+        color: 'rgba(96, 165, 250, 0.3)',
         priceFormat: {
           type: 'volume',
         },
@@ -137,7 +147,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       });
       volumeSeries.priceScale().applyOptions({
         scaleMargins: {
-          top: 0.5, // 讓成交量佔據下半部一半
+          top: 0.5,
           bottom: 0, 
         },
       });
@@ -168,10 +178,10 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     }
 
     const maColors = {
-      ma5: '#facc15', // Yellow
-      ma10: '#f472b6', // Pink
-      ma20: '#2dd4bf', // Teal
-      ma60: '#a78bfa', // Purple
+      ma5: '#facc15',
+      ma10: '#f472b6',
+      ma20: '#2dd4bf',
+      ma60: '#a78bfa',
     };
 
     const maSeriesMap: Record<string, ISeriesApi<any>> = {};
@@ -194,11 +204,103 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       }
     });
 
-    // 投信與外資標示在成交量上方 (使用 HTML Legend，不繪製 Histogram)
-    // 透過 crosshair listener 動態顯示數值
+    // 初始化副圖表：外資與投信變化量
+    if (hasInst && subChartContainerRef.current) {
+      subChart = createChart(subChartContainerRef.current, {
+        layout: {
+          background: { type: ColorType.Solid, color: 'transparent' },
+          textColor: '#94a3b8',
+        },
+        grid: {
+          vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+          horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        },
+        width: subChartContainerRef.current.clientWidth,
+        height: 120, // 類似標準軟體的低高度副圖
+        timeScale: {
+          visible: true,
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          tickMarkFormatter: (time: any) => {
+            if (typeof time === 'string') {
+              const parts = time.split('-');
+              if (parts.length >= 2) return `${parts[1]}月`;
+            } else if (time && time.month) {
+              return `${time.month}月`;
+            }
+            return String(time);
+          },
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          visible: true,
+        },
+        leftPriceScale: {
+          visible: false,
+        }
+      });
 
-    // Crosshair handler for Legend
-    chart.subscribeCrosshairMove((param: MouseEventParams) => {
+      const foreignSeries = subChart.addLineSeries({
+        color: '#38bdf8', // 外資用藍色線
+        lineWidth: 1.5,
+        title: '外資變化',
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+
+      const trustSeries = subChart.addLineSeries({
+        color: '#fb923c', // 投信用橘色線
+        lineWidth: 1.5,
+        title: '投信變化',
+        lastValueVisible: false,
+        priceLineVisible: false,
+      });
+
+      const fData = institutionalData.map(item => ({
+        time: item.time,
+        value: item.foreign || 0
+      }));
+
+      const tData = institutionalData.map(item => ({
+        time: item.time,
+        value: item.trust || 0
+      }));
+
+      foreignSeries.setData(fData);
+      trustSeries.setData(tData);
+
+      // 加一條 0 軸線作為基準線
+      foreignSeries.createPriceLine({
+        price: 0,
+        color: 'rgba(255, 255, 255, 0.2)',
+        lineWidth: 1,
+        lineStyle: 2, // 虛線
+        axisLabelVisible: false,
+        title: '',
+      });
+
+      // 同步縮放與滾動
+      let isSyncingMain = false;
+      let isSyncingSub = false;
+
+      const mainTimeScale = chart.timeScale();
+      const subTimeScale = subChart.timeScale();
+
+      mainTimeScale.subscribeVisibleLogicalRangeChange((range) => {
+        if (isSyncingSub) return;
+        isSyncingMain = true;
+        subTimeScale.setVisibleLogicalRange(range);
+        isSyncingMain = false;
+      });
+
+      subTimeScale.subscribeVisibleLogicalRangeChange((range) => {
+        if (isSyncingMain) return;
+        isSyncingSub = true;
+        mainTimeScale.setVisibleLogicalRange(range);
+        isSyncingSub = false;
+      });
+    }
+
+    const onCrosshairMove = (param: MouseEventParams) => {
       if (param.time) {
         const dataItem = data.find(d => d.time === param.time);
         const instStats = getInstStatsForDate(String(param.time), institutionalData);
@@ -216,7 +318,6 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           });
         }
       } else {
-        // Reset to last item when mouse leaves
         const lastItem = data[data.length - 1];
         if (lastItem) {
           const instStats = getInstStatsForDate(lastItem.time, institutionalData);
@@ -232,9 +333,14 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           });
         }
       }
-    });
+    };
 
-    // Initialize legend with last item
+    chart.subscribeCrosshairMove(onCrosshairMove);
+    if (subChart) {
+      subChart.subscribeCrosshairMove(onCrosshairMove);
+    }
+
+    // 初始化 Legend
     const lastItem = data[data.length - 1];
     if (lastItem) {
       const instStats = getInstStatsForDate(lastItem.time, institutionalData);
@@ -255,8 +361,11 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
+      if (subChart) {
+        subChart.remove();
+      }
     };
-  }, [data, type, showVolume, institutionalData]);
+  }, [data, type, showVolume, institutionalData, hasInst]);
 
   const latestData = data && data.length > 0 ? data[data.length - 1] : null;
   const prevData = data && data.length > 1 ? data[data.length - 2] : null;
@@ -355,7 +464,14 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         </div>
       )}
 
-      <div ref={chartContainerRef} className="chart-wrapper" />
+      <div ref={chartContainerRef} className="chart-wrapper" style={{ height: '350px' }} />
+      {hasInst && (
+        <div 
+          ref={subChartContainerRef} 
+          className="chart-wrapper" 
+          style={{ height: '120px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
+        />
+      )}
     </div>
   );
 };
