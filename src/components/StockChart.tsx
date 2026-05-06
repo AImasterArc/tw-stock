@@ -197,10 +197,66 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
     };
   }, [data, type, showVolume, institutionalData]);
 
+  const latestData = data && data.length > 0 ? data[data.length - 1] : null;
+  const prevData = data && data.length > 1 ? data[data.length - 2] : null;
+  const latestInst = institutionalData && institutionalData.length > 0 ? institutionalData[institutionalData.length - 1] : null;
+
+  let changePercent = 0;
+  let changeAmt = 0;
+  if (latestData && prevData) {
+    changeAmt = latestData.close - prevData.close;
+    changePercent = (changeAmt / prevData.close) * 100;
+  }
+
+  const brokenMAs = [];
+  if (latestData) {
+    if (latestData.ma5 && latestData.close < latestData.ma5) brokenMAs.push('MA5');
+    if (latestData.ma10 && latestData.close < latestData.ma10) brokenMAs.push('MA10');
+    if (latestData.ma20 && latestData.close < latestData.ma20) brokenMAs.push('MA20');
+    if (latestData.ma60 && latestData.close < latestData.ma60) brokenMAs.push('MA60');
+  }
+
   return (
     <div className="card" style={{ position: 'relative' }}>
-      <div className="card-title">
-        {title}
+      <div className="card-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', paddingBottom: '12px', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{title}</span>
+        {latestData && (
+          <div style={{ fontSize: '0.9rem', fontWeight: 'normal', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div>
+              <span style={{ color: '#94a3b8', marginRight: '4px' }}>最新收盤:</span>
+              <span style={{ color: changeAmt > 0 ? '#ef4444' : (changeAmt < 0 ? '#22c55e' : '#e2e8f0'), fontWeight: 'bold' }}>
+                {latestData.close.toFixed(2)} 
+                {' '}({changeAmt > 0 ? '+' : ''}{changeAmt.toFixed(2)}, {changePercent > 0 ? '+' : ''}{changePercent.toFixed(2)}%)
+              </span>
+            </div>
+            
+            {latestInst && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <div>
+                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>外資變化:</span>
+                  <span style={{ color: latestInst.foreign > 0 ? '#ef4444' : (latestInst.foreign < 0 ? '#22c55e' : '#e2e8f0'), fontWeight: 'bold' }}>
+                    {latestInst.foreign > 0 ? '+' : ''}{latestInst.foreign.toLocaleString()}
+                  </span>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', marginRight: '4px' }}>投信變化:</span>
+                  <span style={{ color: latestInst.trust > 0 ? '#ef4444' : (latestInst.trust < 0 ? '#22c55e' : '#e2e8f0'), fontWeight: 'bold' }}>
+                    {latestInst.trust > 0 ? '+' : ''}{latestInst.trust.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            )}
+            
+            {brokenMAs.length > 0 && (
+              <div>
+                <span style={{ color: '#94a3b8', marginRight: '4px' }}>跌破:</span>
+                <span style={{ color: '#f59e0b', fontWeight: 'bold', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                  {brokenMAs.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* 絕對定位的 Legend (浮動在圖表左側) */}

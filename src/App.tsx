@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { LineChart, TrendingUp, Activity } from 'lucide-react';
 import Page1 from './pages/Page1';
 import Page2 from './pages/Page2';
@@ -11,8 +11,8 @@ function Sidebar() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: '產業個股', icon: <LineChart size={24} /> },
-    { path: '/market', label: '大盤與櫃買', icon: <TrendingUp size={24} /> },
+    { path: '/', label: '大盤與櫃買', icon: <TrendingUp size={24} /> },
+    { path: '/industry', label: '產業個股', icon: <LineChart size={24} /> },
     { path: '/top20', label: '成值排行', icon: <Activity size={24} /> },
   ];
 
@@ -61,7 +61,7 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="app-container">
         <Sidebar />
         
@@ -72,14 +72,14 @@ function App() {
           
           <main className="main-content">
             <Routes>
-              <Route path="/market" element={<Page1 data={data} />} />
-              <Route path="/" element={<Page2 data={data} />} />
+              <Route path="/" element={<Page1 data={data} />} />
+              <Route path="/industry" element={<Page2 data={data} />} />
               <Route path="/top20" element={<Page3 data={data} />} />
             </Routes>
           </main>
         </div>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
