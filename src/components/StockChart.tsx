@@ -93,6 +93,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
 
     let subChart1: any = null;
     let subChart2: any = null;
+    let foreignSeries: any = null;
+    let trustSeries: any = null;
 
     const handleResize = () => {
       const clientWidth = chartContainerRef.current?.clientWidth;
@@ -243,7 +245,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         }
       });
 
-      const foreignSeries = subChart1.addHistogramSeries({
+      foreignSeries = subChart1.addHistogramSeries({
         priceFormat: {
           type: 'volume',
         },
@@ -311,7 +313,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         }
       });
 
-      const trustSeries = subChart2.addHistogramSeries({
+      trustSeries = subChart2.addHistogramSeries({
         priceFormat: {
           type: 'volume',
         },
@@ -376,7 +378,42 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       });
     }
 
-    const onCrosshairMove = (param: MouseEventParams) => {
+    const onCrosshairMove = (param: MouseEventParams, originChart: 'chart' | 'subChart1' | 'subChart2') => {
+      const time = param.time;
+
+      // 1. 同步其餘圖表的游標
+      if (param.sourceEvent) {
+        if (originChart === 'chart') {
+          if (subChart1 && foreignSeries) {
+            if (time) subChart1.setCrosshairPosition(0, time, foreignSeries);
+            else subChart1.clearCrosshairPosition();
+          }
+          if (subChart2 && trustSeries) {
+            if (time) subChart2.setCrosshairPosition(0, time, trustSeries);
+            else subChart2.clearCrosshairPosition();
+          }
+        } else if (originChart === 'subChart1') {
+          if (chart && mainSeries) {
+            if (time) chart.setCrosshairPosition(0, time, mainSeries);
+            else chart.clearCrosshairPosition();
+          }
+          if (subChart2 && trustSeries) {
+            if (time) subChart2.setCrosshairPosition(0, time, trustSeries);
+            else subChart2.clearCrosshairPosition();
+          }
+        } else if (originChart === 'subChart2') {
+          if (chart && mainSeries) {
+            if (time) chart.setCrosshairPosition(0, time, mainSeries);
+            else chart.clearCrosshairPosition();
+          }
+          if (subChart1 && foreignSeries) {
+            if (time) subChart1.setCrosshairPosition(0, time, foreignSeries);
+            else subChart1.clearCrosshairPosition();
+          }
+        }
+      }
+
+      // 2. 更新 Legend 數據
       if (param.time) {
         const dataItem = data.find(d => d.time === param.time);
         const instStats = getInstStatsForDate(String(param.time), institutionalData);
@@ -411,12 +448,12 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       }
     };
 
-    chart.subscribeCrosshairMove(onCrosshairMove);
+    chart.subscribeCrosshairMove((p: any) => onCrosshairMove(p, 'chart'));
     if (subChart1) {
-      subChart1.subscribeCrosshairMove(onCrosshairMove);
+      subChart1.subscribeCrosshairMove((p: any) => onCrosshairMove(p, 'subChart1'));
     }
     if (subChart2) {
-      subChart2.subscribeCrosshairMove(onCrosshairMove);
+      subChart2.subscribeCrosshairMove((p: any) => onCrosshairMove(p, 'subChart2'));
     }
 
     // 初始化 Legend
