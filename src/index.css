@@ -270,47 +270,378 @@ body {
   position: relative;
 }
 
-/* Mobile Adjustments */
+/* Mobile Adjustments & Premium Features */
 @media (max-width: 768px) {
+  body {
+    overflow-y: auto; /* Allow scrolling on body if needed */
+  }
+
   .app-container {
     flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    padding-bottom: 64px; /* Space for Bottom Nav */
   }
   
   .sidebar {
-    width: 100%;
-    height: 60px;
-    flex-direction: row;
-    padding: 0;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: none !important; /* Hide sidebar on mobile */
   }
   
-  .sidebar:hover {
-    width: 100%;
+  .bottom-nav {
+    display: flex !important; /* Show bottom navigation on mobile */
   }
 
-  .sidebar-header {
-    display: none;
-  }
-  
-  .nav-item {
-    justify-content: center;
-    padding: 0;
-  }
-  
-  .nav-icon {
-    min-width: auto;
-  }
-
-  .nav-label {
-    display: none;
+  .top-bar {
+    padding: 0.75rem 1rem;
+    background: rgba(15, 17, 26, 0.9);
   }
   
   .main-content {
-    padding: 1rem;
+    padding: 0.75rem;
+    flex: none;
+    width: 100%;
   }
-  
+
+  /* Compact Card Layout for Mobile */
+  .card {
+    border-radius: 12px;
+    padding: 12px 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .card:hover {
+    transform: none; /* Disable hover movement on mobile */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+
   .chart-wrapper {
-    height: 400px; /* Slightly shorter on mobile but still larger than before */
+    height: 380px !important; /* Reduced for better screen fit on mobile */
   }
+}
+
+/* Bottom Navigation (Mobile Only) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(20, 24, 33, 0.85); /* Premium dark slate */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: none; /* Hidden on desktop */
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  padding: 4px 8px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.bottom-nav-item {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  gap: 2px;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.92);
+}
+
+.bottom-nav-item.active {
+  color: var(--accent);
+}
+
+.bottom-nav-item.active .bottom-nav-icon {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.bottom-nav-icon {
+  transition: transform 0.25s ease;
+  display: flex;
+  align-items: center;
+}
+
+.bottom-nav-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  transition: color 0.25s ease;
+}
+
+/* Stock Row Cards for Mobile Lists */
+.stock-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.stock-row-card {
+  background: var(--panel-bg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stock-row-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.stock-row-card:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stock-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-row-rank {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--text-muted);
+  min-width: 18px;
+  text-align: center;
+}
+
+.stock-row-rank.top-rank-1 { color: #facc15; } /* Gold */
+.stock-row-rank.top-rank-2 { color: #94a3b8; } /* Silver */
+.stock-row-rank.top-rank-3 { color: #b45309; } /* Bronze */
+
+.stock-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.stock-row-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.stock-row-ticker {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.stock-row-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stock-row-price-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.stock-row-price {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Inter', monospace;
+}
+
+.stock-row-change {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.stock-row-change.up {
+  color: var(--up-color);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.stock-row-change.down {
+  color: var(--down-color);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.stock-row-change.flat {
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.stock-row-vol-section {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+  min-width: 55px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Bottom Sheet / Modal Drawer for Charts */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.bottom-sheet {
+  background: rgba(15, 17, 26, 0.96);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 16px 14px 40px 14px;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-overlay.active .bottom-sheet {
+  transform: translateY(0);
+}
+
+/* Desktop Styles for Modal */
+@media (min-width: 769px) {
+  .modal-overlay {
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .bottom-sheet {
+    max-width: 950px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transform: scale(0.93);
+    max-height: 85vh;
+    padding: 24px;
+  }
+  .modal-overlay.active .bottom-sheet {
+    transform: scale(1);
+  }
+}
+
+.bottom-sheet-drag-handle {
+  width: 36px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  margin: -4px auto 14px auto;
+}
+
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.bottom-sheet-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+}
+
+.bottom-sheet-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: var(--text-main);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bottom-sheet-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* External Dynamic Legend for Mobile Charts */
+.external-legend-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.external-legend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.external-legend-date {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.external-legend-mas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.external-legend-vol-inst {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 6px;
+  margin-top: 4px;
 }

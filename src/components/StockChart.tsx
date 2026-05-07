@@ -78,6 +78,8 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
   const subChartContainerRef2 = useRef<HTMLDivElement>(null); // 投信副圖
   const hasInst = institutionalData && institutionalData.length > 0;
   
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   // Legend state
   const [legend, setLegend] = useState<{
     date: string;
@@ -89,12 +91,24 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
   });
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (!chartContainerRef.current || !data || data.length === 0) return;
 
     let subChart1: any = null;
     let subChart2: any = null;
     let foreignSeries: any = null;
     let trustSeries: any = null;
+
+    const mainHeight = isMobile ? 220 : 300;
+    const subHeight1 = isMobile ? 80 : 100;
+    const subHeight2 = isMobile ? 85 : 110;
 
     const handleResize = () => {
       const clientWidth = chartContainerRef.current?.clientWidth;
@@ -115,7 +129,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
       },
       width: chartContainerRef.current.clientWidth,
-      height: 300,
+      height: mainHeight,
       timeScale: {
         visible: !hasInst, // 如果有副圖表，則隱藏主圖表的時間軸
         borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -209,6 +223,14 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
       }
     });
 
+    // 行動端預設將圖表縮放到最近 60 天
+    if (isMobile && data.length > 60) {
+      chart.timeScale().setVisibleLogicalRange({
+        from: data.length - 60,
+        to: data.length,
+      });
+    }
+
     // 初始化副圖表：外資與投信變化量（分成兩個副圖，用柱狀圖顯示，比例尺一致）
     if (hasInst && subChartContainerRef1.current && subChartContainerRef2.current) {
       // 1. 計算兩邊比例尺一致的對稱 Min/Max (以張數為單位)
@@ -230,7 +252,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
         },
         width: subChartContainerRef1.current.clientWidth,
-        height: 100,
+        height: subHeight1,
         timeScale: {
           visible: false, // 隱藏中間圖的時間軸
           borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -289,7 +311,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
           horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
         },
         width: subChartContainerRef2.current.clientWidth,
-        height: 110, // 稍微高一點點保留給時間軸刻度
+        height: subHeight2, // 稍微高一點點保留給時間軸刻度
         timeScale: {
           visible: true, // 最底下的副圖顯露時間軸
           borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -484,7 +506,7 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         subChart2.remove();
       }
     };
-  }, [data, type, showVolume, institutionalData, hasInst]);
+  }, [data, type, showVolume, institutionalData, hasInst, isMobile]);
 
   const latestData = data && data.length > 0 ? data[data.length - 1] : null;
   const prevData = data && data.length > 1 ? data[data.length - 2] : null;
@@ -530,33 +552,61 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         )}
       </div>
       
-      {/* 絕對定位的 Legend (浮動在圖表左側) */}
-      <div style={{
-        position: 'absolute',
-        top: '60px',
-        left: '24px',
-        zIndex: 10,
-        pointerEvents: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '4px',
-        fontSize: '0.85rem',
-        background: 'rgba(15, 17, 26, 0.6)',
-        padding: '8px',
-        borderRadius: '8px',
-        backdropFilter: 'blur(4px)'
-      }}>
-        <div style={{ color: '#e2e8f0', fontWeight: 'bold' }}>{legend.date}</div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {legend.ma5 && <span style={{ color: '#facc15' }}>MA5: {legend.ma5}</span>}
-          {legend.ma10 && <span style={{ color: '#f472b6' }}>MA10: {legend.ma10}</span>}
-          {legend.ma20 && <span style={{ color: '#2dd4bf' }}>MA20: {legend.ma20}</span>}
-          {legend.ma60 && <span style={{ color: '#a78bfa' }}>MA60: {legend.ma60}</span>}
+      {/* 行動端外置 Legend 資訊網格 (0% 遮擋，100% 易讀性) */}
+      {isMobile && (
+        <div className="external-legend-container">
+          <div className="external-legend-row">
+            <div className="external-legend-date">{legend.date || latestData?.time}</div>
+            <div className="external-legend-mas">
+              {legend.ma5 && <span style={{ color: '#facc15' }}>MA5: {legend.ma5}</span>}
+              {legend.ma10 && <span style={{ color: '#f472b6' }}>MA10: {legend.ma10}</span>}
+              {legend.ma20 && <span style={{ color: '#2dd4bf' }}>MA20: {legend.ma20}</span>}
+              {legend.ma60 && <span style={{ color: '#a78bfa' }}>MA60: {legend.ma60}</span>}
+            </div>
+          </div>
+          {showVolume && (
+            <div className="external-legend-vol-inst">
+              <div style={{ color: '#60a5fa' }}>成交量: {legend.vol}</div>
+              {hasInst && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {legend.foreign && <span style={{ color: legend.foreign.includes('+') ? '#ef4444' : (legend.foreign.includes('-') ? '#22c55e' : '#e2e8f0') }}>外資: {legend.foreign}</span>}
+                  {legend.trust && <span style={{ color: legend.trust.includes('+') ? '#ef4444' : (legend.trust.includes('-') ? '#22c55e' : '#e2e8f0') }}>投信: {legend.trust}</span>}
+                </div>
+              )}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* 成交量與法人資訊的 Legend (浮動在成交量區域左側上方) */}
-      {showVolume && (
+      {/* 絕對定位的 Legend (浮動在圖表左側，僅限桌上型電腦) */}
+      {!isMobile && (
+        <div style={{
+          position: 'absolute',
+          top: '60px',
+          left: '24px',
+          zIndex: 10,
+          pointerEvents: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+          fontSize: '0.85rem',
+          background: 'rgba(15, 17, 26, 0.6)',
+          padding: '8px',
+          borderRadius: '8px',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{ color: '#e2e8f0', fontWeight: 'bold' }}>{legend.date}</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {legend.ma5 && <span style={{ color: '#facc15' }}>MA5: {legend.ma5}</span>}
+            {legend.ma10 && <span style={{ color: '#f472b6' }}>MA10: {legend.ma10}</span>}
+            {legend.ma20 && <span style={{ color: '#2dd4bf' }}>MA20: {legend.ma20}</span>}
+            {legend.ma60 && <span style={{ color: '#a78bfa' }}>MA60: {legend.ma60}</span>}
+          </div>
+        </div>
+      )}
+
+      {/* 成交量與法人資訊的 Legend (浮動在成交量區域左側上方，僅限桌上型電腦) */}
+      {!isMobile && showVolume && (
         <div style={{
           position: 'absolute',
           bottom: '130px', /* 調整為成交量柱狀圖的上方位置 */
@@ -582,18 +632,18 @@ const StockChart = ({ data, title, type = 'candlestick', showVolume = false, ins
         </div>
       )}
 
-      <div ref={chartContainerRef} className="chart-wrapper" style={{ height: '300px' }} />
+      <div ref={chartContainerRef} className="chart-wrapper" style={{ height: isMobile ? '220px' : '300px' }} />
       {hasInst && (
         <>
           <div 
             ref={subChartContainerRef1} 
             className="chart-wrapper" 
-            style={{ height: '100px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
+            style={{ height: isMobile ? '80px' : '100px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
           />
           <div 
             ref={subChartContainerRef2} 
             className="chart-wrapper" 
-            style={{ height: '110px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
+            style={{ height: isMobile ? '85px' : '110px', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }} 
           />
         </>
       )}

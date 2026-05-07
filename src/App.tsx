@@ -35,9 +35,36 @@ function Sidebar() {
   );
 }
 
+function BottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const navItems = [
+    { path: '/', label: '大盤指數', icon: <TrendingUp size={20} /> },
+    { path: '/industry', label: '產業個股', icon: <LineChart size={20} /> },
+    { path: '/top20', label: '成值排行', icon: <Activity size={20} /> },
+  ];
+
+  return (
+    <nav className="bottom-nav">
+      {navItems.map((item) => (
+        <button
+          key={item.path}
+          className={`bottom-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+          onClick={() => navigate(item.path)}
+        >
+          <div className="bottom-nav-icon">{item.icon}</div>
+          <span className="bottom-nav-label">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 function App() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}data.json`)
@@ -50,6 +77,12 @@ function App() {
         console.error("Error fetching data:", err);
         setLoading(false);
       });
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   if (loading) {
@@ -63,12 +96,14 @@ function App() {
   return (
     <HashRouter>
       <div className="app-container">
-        <Sidebar />
+        {!isMobile ? <Sidebar /> : <BottomNav />}
         
         <div className="main-wrapper">
-          <header className="top-bar">
-            <span className="last-updated">更新時間: {new Date(data.last_updated).toLocaleString('zh-TW')}</span>
-          </header>
+          {!isMobile && (
+            <header className="top-bar">
+              <span className="last-updated">更新時間: {new Date(data.last_updated).toLocaleString('zh-TW')}</span>
+            </header>
+          )}
           
           <main className="main-content">
             <Routes>
