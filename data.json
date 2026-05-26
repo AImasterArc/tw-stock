@@ -1,23 +1,23 @@
 {
-  "last_updated": "2026-05-25T12:55:02.455798",
+  "last_updated": "2026-05-26T01:57:38.806346",
   "indices": {
     "TAEX": [
       {
-        "time": "2026-05-25",
-        "open": 42667.87,
-        "high": 43645.78,
-        "low": 42667.87,
-        "close": 43644.4,
+        "time": "2026-05-26",
+        "open": 43708.89,
+        "high": 44097.63,
+        "low": 43349.77,
+        "close": 43577.79,
         "volume": 0
       }
     ],
     "TPEx": [
       {
-        "time": "2026-05-25",
-        "open": 426.34,
-        "high": 437.27,
-        "low": 426.34,
-        "close": 434.99,
+        "time": "2026-05-26",
+        "open": 437.65,
+        "high": 443.26,
+        "low": 432.47,
+        "close": 435.71,
         "volume": 0
       }
     ]
@@ -179,64 +179,50 @@
   "top_20_volume": [
     {
       "rank": 1,
-      "name": "聯發科",
-      "ticker": "2454.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 2,
       "name": "台積電",
       "ticker": "2330.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 3,
+      "rank": 2,
       "name": "南亞科",
       "ticker": "2408.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 4,
+      "rank": 3,
       "name": "國巨*",
       "ticker": "2327.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 6,
-      "name": "華通",
-      "ticker": "2313.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 8,
+      "rank": 4,
       "name": "華邦電",
       "ticker": "2344.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 9,
+      "rank": 5,
       "name": "聯電",
       "ticker": "2303.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 11,
-      "name": "日月光投控",
-      "ticker": "3711.TW",
+      "rank": 7,
+      "name": "華通",
+      "ticker": "2313.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 12,
-      "name": "群創",
-      "ticker": "3481.TW",
+      "name": "力積電",
+      "ticker": "6770.TW",
       "chart": [],
       "institutional": []
     },
@@ -248,72 +234,86 @@
       "institutional": []
     },
     {
+      "rank": 14,
+      "name": "聯發科",
+      "ticker": "2454.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
       "rank": 15,
-      "name": "台光電",
-      "ticker": "2383.TW",
+      "name": "京元電子",
+      "ticker": "2449.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 18,
-      "name": "力積電",
-      "ticker": "6770.TW",
+      "rank": 16,
+      "name": "日月光投控",
+      "ticker": "3711.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 19,
-      "name": "創意",
-      "ticker": "3443.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 20,
+      "rank": 17,
       "name": "廣達",
       "ticker": "2382.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 21,
-      "name": "緯穎",
-      "ticker": "6669.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 22,
-      "name": "緯創",
-      "ticker": "3231.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 23,
-      "name": "啟碁",
-      "ticker": "6285.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 24,
+      "rank": 19,
       "name": "台玻",
       "ticker": "1802.TW",
       "chart": [],
       "institutional": []
     },
     {
+      "rank": 20,
+      "name": "創意",
+      "ticker": "3443.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 22,
+      "name": "緯穎",
+      "ticker": "6669.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 23,
+      "name": "新唐",
+      "ticker": "4919.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 24,
+      "name": "啟碁",
+      "ticker": "6285.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
       "rank": 25,
-      "name": "友達",
-      "ticker": "2409.TW",
+      "name": "微星",
+      "ticker": "2377.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 26,
-      "name": "致茂",
-      "ticker": "2360.TW",
+      "name": "緯創",
+      "ticker": "3231.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 27,
+      "name": "光聖",
+      "ticker": "6442.TW",
       "chart": [],
       "institutional": []
     }
