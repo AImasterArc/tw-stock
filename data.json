@@ -1,23 +1,23 @@
 {
-  "last_updated": "2026-05-27T12:46:15.761021",
+  "last_updated": "2026-05-28T01:49:32.266583",
   "indices": {
     "TAEX": [
       {
-        "time": "2026-05-27",
-        "open": 43842.26,
-        "high": 44818.25,
-        "low": 43842.26,
-        "close": 44256.8,
+        "time": "2026-05-28",
+        "open": 44240.8,
+        "high": 44954.09,
+        "low": 44240.8,
+        "close": 44681.01,
         "volume": 0
       }
     ],
     "TPEx": [
       {
-        "time": "2026-05-27",
-        "open": 440.92,
-        "high": 449.38,
-        "low": 436.54,
-        "close": 440.19,
+        "time": "2026-05-28",
+        "open": 440.6,
+        "high": 447.3,
+        "low": 440.53,
+        "close": 445.6,
         "volume": 0
       }
     ]
@@ -179,36 +179,36 @@
   "top_20_volume": [
     {
       "rank": 1,
-      "name": "聯發科",
-      "ticker": "2454.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 2,
       "name": "台積電",
       "ticker": "2330.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 3,
-      "name": "群創",
-      "ticker": "3481.TW",
+      "rank": 2,
+      "name": "聯發科",
+      "ticker": "2454.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 4,
+      "rank": 3,
       "name": "華邦電",
       "ticker": "2344.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 5,
+      "rank": 4,
       "name": "南亞科",
       "ticker": "2408.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 5,
+      "name": "群創",
+      "ticker": "3481.TW",
       "chart": [],
       "institutional": []
     },
@@ -220,51 +220,44 @@
       "institutional": []
     },
     {
-      "rank": 9,
-      "name": "京元電子",
-      "ticker": "2449.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 11,
+      "rank": 7,
       "name": "旺宏",
       "ticker": "2337.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 12,
-      "name": "台玻",
-      "ticker": "1802.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 13,
-      "name": "華通",
-      "ticker": "2313.TW",
-      "chart": [],
-      "institutional": []
-    },
-    {
-      "rank": 14,
+      "rank": 9,
       "name": "力積電",
       "ticker": "6770.TW",
       "chart": [],
       "institutional": []
     },
     {
-      "rank": 15,
-      "name": "日月光投控",
-      "ticker": "3711.TW",
+      "rank": 10,
+      "name": "京元電子",
+      "ticker": "2449.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 12,
+      "name": "力成",
+      "ticker": "6239.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 14,
+      "name": "華通",
+      "ticker": "2313.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 18,
-      "name": "力成",
-      "ticker": "6239.TW",
+      "name": "日月光投控",
+      "ticker": "3711.TW",
       "chart": [],
       "institutional": []
     },
@@ -277,15 +270,22 @@
     },
     {
       "rank": 20,
-      "name": "友達",
-      "ticker": "2409.TW",
+      "name": "光寶科",
+      "ticker": "2301.TW",
+      "chart": [],
+      "institutional": []
+    },
+    {
+      "rank": 21,
+      "name": "創意",
+      "ticker": "3443.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 22,
-      "name": "台光電",
-      "ticker": "2383.TW",
+      "name": "廣達",
+      "ticker": "2382.TW",
       "chart": [],
       "institutional": []
     },
@@ -298,22 +298,22 @@
     },
     {
       "rank": 24,
-      "name": "光寶科",
-      "ticker": "2301.TW",
+      "name": "台光電",
+      "ticker": "2383.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 25,
-      "name": "廣達",
-      "ticker": "2382.TW",
+      "name": "友達",
+      "ticker": "2409.TW",
       "chart": [],
       "institutional": []
     },
     {
       "rank": 27,
-      "name": "緯穎",
-      "ticker": "6669.TW",
+      "name": "健策",
+      "ticker": "3653.TW",
       "chart": [],
       "institutional": []
     }
